@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>EntryWay</title>
+    <!-- YUI CSS -->
+<link rel="stylesheet" type="text/css" href="inputex/lib/yui/reset-fonts/reset-fonts.css">
+<link rel="stylesheet" type="text/css" href="inputex/lib/yui/base/base.css">
+<link rel="stylesheet" type="text/css" href="inputex/lib/yui/grids/grids.css">
+
+<link rel="stylesheet" type="text/css" href="inputex/lib/yui/container/assets/container.css"> 
+<link rel="stylesheet" type="text/css" href="inputex/lib/yui/assets/skins/sam/skin.css">
+
+<!-- InputEx CSS -->
+<link type='text/css' rel='stylesheet' href="inputex/css/inputEx.css" />
+<link rel="stylesheet" type="text/css" href="inputex/css/demo.css"/>
+<style type="text/css">
+.yui-u.first{position:relative}
+#reform{position:absolute;top:150px;right:0}
+#name{width:10em}
+#reformedcol{display:none}
+#jsonoutput, #jsonschema{overflow:auto}
+</style>
+
+	<script type="text/javascript" src="js/jquery.1.4.2.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.8.2.custom.min.js"></script>
+	<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
+        <script type="text/javascript" src="js/jquery.synctranslit.js"></script>
+        <script type="text/javascript" src="js/jquery.reformed.js"></script>
+        <script type="text/javascript">
+            $.fn.serializeObject = function(prevent_dups)
+            {
+                if(prevent_dups == 'undefined') prevent_dups = true;
+               var o = {};
+               var a = this.serializeArray();
+               $.each(a, function() {
+                    if (this.value != '' && this.value != undefined) {
+                        if (o[this.name] && prevent_dups == false) {
+                            if (!o[this.name].push) {
+                                o[this.name] = [o[this.name]];
+                            }
+                            o[this.name].push(this.value || '');
+                        } else {
+                            o[this.name] = this.value || '';
+                        }
+                    }
+               });
+               return o;
+            };
+            $.fn.serializeObjectValuesAsKeys = function()
+            {
+               var o = {};
+               var a = this.serializeArray();
+               $.each(a, function() {
+                    if (this.value != '' && this.value != undefined) {
+                        var v = $.transliterateAll(this.value);
+                        if (o[v]) {
+                            if (!o[v].push) {
+                                o[v] = [o[v]];
+                            }
+                            o[v].push('');
+                        } else {
+                            o[v] = '';
+                        }
+                    }
+               });
+               delete o[''];
+               return o;
+            };
+            
+            $.fn.Cicada = {};
+            $.fn.Cicada.field_types = {
+                        "date": {
+                            "format":"date-time",
+                            "_inputex": {
+                                "_type":"datepicker"
+                            }
+                        },
+                        "time": {
+                            "format":"time",
+                            "_inputex": {
+                                "_type":"time"
+                            }
+                        },
+                        "color": {
+                            "format":"color",
+                            "_inputex": {
+                                "_type":"color",
+                                "palette": 3
+                            }
+                        },
+                        "phone": {
+                            "format":"phone"
+                        },
+                        "uri, url, web":{
+                            "format":"uri",
+                            "_inputex":{
+                                "_type":"url",
+                                "showMsg":true
+                            }
+                        },
+                        "email":{
+                            "format":"email",
+                            "_inputex":{
+                                "_type":"email",
+                                "showMsg":true
+                            }
+                        },
+                        "address, street address":{
+                            "format":"street-address",
+                            "_inputex":{
+                                "_type":"street-address"
+                            }
+                        },
+                        "ip, ip address":{
+                            "format":"ip-address",
+                            "_inputex":{
+                                "_type":"IPv4",
+                                "showMsg":true
+                            }
+                        },
+                        "city, locality":{
+                            "format":"locality",
+                            "_inputex":{
+                                "_type":"locality"
+                            }
+                        },
+                        "state, region":{
+                            "format":"region",
+                            "_inputex":{
+                                "_type":"region"
+                            }
+                        },
+                        "zip, postal code":{
+                            "format":"postal-code",
+                            "_inputex":{
+                                "_type":"postal-code"
+                            }
+                        },
+                        "country":{
+                            "format":"country",
+                            "_inputex":{
+                                "_type":"country"
+                            }
+                        }
+                    };
+            
+            $.fn.toJSONSchema = function(name) {
+                var field_types = this.Cicada.field_types;
+                var o = this.serializeObject();
+                var schema = {};
+                schema[name] = {"id":name, "description":"Cicada generated JSON Schema for "+name,
+                    "type":"object", "properties":o};
+                for(var prop in schema[name].properties) {
+                   schema[name].properties[prop] = {"type":"string", "optional":true, "title":schema[name].properties[prop],
+                        "_inputex":{"label":schema[name].properties[prop]}};
+                    
+                    function mergeInFieldSettings(s, key) {
+                        if (prop.search(new RegExp(s, "i")) != -1) {
+                            for (var el in field_types[key]) {
+                                if (typeof field_types[key][el] == 'object') {
+                                    for (var el2 in field_types[key][el]) {
+                                        schema[name].properties[prop][el][el2] = field_types[key][el][el2];
+                                    }
+                                } else {
+                                    schema[name].properties[prop][el] = field_types[key][el];
+                                }
+                            }
+                        }
+                    }
+                    
+                    for (var key in field_types) {
+                        if ((ses = key.split(',')).length > 1) {
+                            $(ses).each(function(idx, s2) {
+                                mergeInFieldSettings(s2.trim(), key);
+                            });
+                        } else {
+                            mergeInFieldSettings(key, key);
+                        }
+                    }
+                }
+                return schema;
+            }
+            
+            $.fn.toInputExForm = function(schema) {
+                // Create the JsonSchema builder object
+                var builder = new inputEx.JsonSchema.Builder({
+                        'schemaIdentifierMap': schema,
+                        'defaultOptions':{
+                           'showMsg':true
+                        }
+
+                });
+                
+                // get schema name
+                for(var name in schema) {}
+                
+                // Get the inputEx field definition from the "Person" object
+                var inputExDefinition = builder.schemaToInputEx(schema[name]);
+                
+                // Add 'container1' as parent element
+                inputExDefinition.parentEl = 'reformed';
+                
+                $('#reformed').empty();
+                // Create the form
+                var f = inputEx(inputExDefinition);
+                $('#reformedcol').css('display', 'block');
+            }
+            
+            
+            $(document).ready(function() {
+                $('#name').change(function() {
+                    $('#inlinename').html($('#name').val());
+                });
+                $('#inlinename').html($('#name').val());
+                $('#reform').click(function() {
+                   var obj = $('form#thing fieldset input').toJSONSchema($('#name').val());
+                   $('#jsonschema').html(schema = JSON.stringify(obj, null, '\t'));
+                   $.fn.toInputExForm(obj);
+                });
+                    
+                $('#thing fieldset input').each(function(idx, el) {
+                    $(el).keyup(function(){
+                        var str = $(this).val();
+                        var result = '';
+                        var o = $.transliterate.defaults;
+                        for (var i = 0; i < str.length; i++) {
+                                result += $.transliterate(str.charAt(i), o)
+                        }
+                        var regExp = new RegExp('[' + o.urlSeparator + ']{2,}', 'g');
+                        result = result.replace(regExp, o.urlSeparator);
+                        this.name = result;
+                    });
+                });
+                
+                $('#showjson').click(function() {
+                    //$.reform($('#reformed').serializeObject(), $('#jsonoutput'));
+                    $('#jsonoutput').html(JSON.stringify($('#reformed').serializeObject(), null, '\t'));
+                });
+            });
+        </script>
+</head>
+<body class="yui-skin-sam">
+<div id="doc3" class="yui-t7">
+   <div id="hd" role="banner"><h1>EntryWay to Cicada</h1></div>
+   <div id="bd" role="main">
+	    <div class="yui-gb">
+        <div class="yui-u first">
+            <form action="" id="thing">
+                I'd like to record information about a
+                <input type="text" id="name" name="name" onfocus="this.value=(this.value=='thing') ? '' : this.value;" onblur="this.value=(this.value=='') ? 'thing' : this.value;" value="thing" />.
+                <p>This <strong id="inlinename">_______</strong> has these attributes:</p>
+                    <fieldset name="attributes">
+                        <ul>
+                                <li>
+                                    <input type="text" name="field1" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field2" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field3" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field4" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field5" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field6" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field7" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field8" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field9" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field10" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field11" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field12" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field13" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field14" />
+                                </li>
+                                <li>
+                                    <input type="text" name="field15" />
+                                </li>
+                        </ul>
+                    </fieldset>
+                <input type="button" id="reform" value="Build a form with these" />
+            </form>
+        </div>
+        <div class="yui-u" id="reformedcol">
+            <form id="reformed">
+            </form>
+            <input type="button" id="showjson" value="Save" />
+            <h4>JSON Schema with Form helpers</h4>
+            <pre id="jsonschema"></pre>
+        </div>
+        <div class="yui-u">
+            <pre id="jsonoutput"></pre>
+        </div>
+    </div>
+
+	</div>
+   <div id="ft" role="contentinfo"><p>&copy; 2010 <a href="http://couch.io/">Couch.io</a></p></div>
+</div>
+
+<!-- YUI Library -->
+<script type="text/javascript" src="inputex/lib/yui/utilities/utilities.js"></script>
+<script type="text/javascript" src="inputex/lib/yui/container/container-min.js"></script>
+<script type="text/javascript" src="inputex/lib/yui/button/button-min.js"></script>
+<script type="text/javascript" src="inputex/lib/yui/calendar/calendar-min.js"></script>
+<script type="text/javascript" src="inputex/lib/yui/json/json-min.js"></script>
+
+<!-- InputEx -->
+<script src="inputex/js/inputex.js"  type='text/javascript'></script>
+<script src="inputex/js/Visus.js"  type='text/javascript'></script>
+<script src="inputex/js/Field.js"  type='text/javascript'></script>
+<script src="inputex/js/Group.js"  type='text/javascript'></script>
+<script src="inputex/js/widgets/Button.js"  type='text/javascript'></script>
+<script src="inputex/js/mixins/choice.js"  type='text/javascript'></script>
+
+<script src="inputex/js/Form.js"  type='text/javascript'></script>
+<script src="inputex/js/mixins/choice.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/StringField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/RadioField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/CombineField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/CheckBox.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/ColorField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/EmailField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/HiddenField.js"  type='text/javascript'></script>
+
+<script src="inputex/js/fields/PasswordField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/Textarea.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/UrlField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/IntegerField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/NumberField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/ListField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/SelectField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/RTEField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/UneditableField.js"  type='text/javascript'></script>
+
+<script src="inputex/js/fields/InPlaceEdit.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/SliderField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/TimeField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/DateField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/DatePickerField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/DateTimeField.js"  type='text/javascript'></script>
+<script src="inputex/js/widgets/Dialog.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/UpperCaseField.js"  type='text/javascript'></script>
+<script src="inputex/js/fields/IPv4Field.js"  type='text/javascript'></script>
+
+<script src="inputex/js/fields/VectorField.js"  type='text/javascript'></script>
+<script src="inputex/js/json-schema.js"></script>
+</body>
+</html>
