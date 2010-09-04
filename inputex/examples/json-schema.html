@@ -31,7 +31,30 @@
 	<div class='codeContainer'>
 		<textarea name="code" class="JScript">
 // Create a schemaIdentifierMap 
-var schemaIdentifierMap = {"Person":{"id":"Person","description":"Cicada generated JSON Schema for Person","type":"object","properties":{"first_name":{"type":"string","optional":true,"title":"first name","_inputex":{"label":"first name","typeInvite":"first name"}}}}}
+var schemaIdentifierMap = {
+ // Person definition
+ "Person": {
+	"id": "Person",
+	"description":"A person",
+ 	"type":"object",
+ 	"properties": {
+  		"name": { "type":"string"},
+    	"born" : { "type":"string", "format":"date", "optional":true},
+    	"gender" : { "type":"string", "choices": [ {"value":"male","label":"Guy"}, {"value":"female","label":"Girl"} ]},
+		"grownup": { "type": "boolean" },
+		"favoritecolors": { "type": "array" },
+    	"address": { 
+			"type":"object",
+      		"properties":{
+      			"street":{"type":"string"},
+        		"city":{"type":"string"},
+        		"state":{"type":"string"}
+      		}
+    	}
+  	}
+ }
+};
+
 // Create the JsonSchema builder object
 var builder = new inputEx.JsonSchema.Builder({
 	'schemaIdentifierMap': schemaIdentifierMap
