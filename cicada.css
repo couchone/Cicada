@@ -7,10 +7,10 @@
 }
 
 body{
-	font-family: "ChunkFiveRegular", Baskerville,"Baskerville old face","Hoefler Text",Garamond,"Times New Roman",serif;
 	color: #999;
 }
-#hd h1{font-size:197%;font-weight:normal;color:#333}
+#hd h1{font-family: "ChunkFiveRegular", Baskerville,"Baskerville old face","Hoefler Text",Garamond,"Times New Roman",serif;font-size:197%;font-weight:normal;color:#333}
+#hd .appname{font-family: "ChunkFiveRegular", Baskerville,"Baskerville old face","Hoefler Text",Garamond,"Times New Roman",serif;text-decoration:none;color:black;font-size:153.9%}
 .createappbtn{
 	font-family: "Arial", sans-serif;
 	float:left;

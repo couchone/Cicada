@@ -2,11 +2,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-    <title>EntryWay</title>
-    <!-- YUI CSS -->
-<link rel="stylesheet" type="text/css" href="inputex/lib/yui/reset-fonts/reset-fonts.css">
-<link rel="stylesheet" type="text/css" href="inputex/lib/yui/base/base.css">
-<link rel="stylesheet" type="text/css" href="inputex/lib/yui/grids/grids.css">
+    <title>Cicada: new thing</title>
+        <!-- YUI CSS -->
+        <link rel="stylesheet" type="text/css" href="inputex/lib/yui/reset-fonts/reset-fonts.css">
+        <link rel="stylesheet" type="text/css" href="inputex/lib/yui/base/base.css">
+        <link rel="stylesheet" type="text/css" href="inputex/lib/yui/grids/grids.css">
+	<link rel="stylesheet" type="text/css" href="cicada.css" />
 
 <link rel="stylesheet" type="text/css" href="inputex/lib/yui/container/assets/container.css"> 
 <link rel="stylesheet" type="text/css" href="inputex/lib/yui/assets/skins/sam/skin.css">
@@ -27,187 +28,9 @@
 	<script type="text/javascript" src="js/jquery.json-2.2.min.js"></script>
         <script type="text/javascript" src="js/jquery.synctranslit.js"></script>
         <script type="text/javascript" src="js/jquery.reformed.js"></script>
-        <script type="text/javascript">
-            $.fn.serializeObject = function(prevent_dups)
-            {
-                if(prevent_dups == 'undefined') prevent_dups = true;
-               var o = {};
-               var a = this.serializeArray();
-               $.each(a, function() {
-                    if (this.value != '' && this.value != undefined) {
-                        if (o[this.name] && prevent_dups == false) {
-                            if (!o[this.name].push) {
-                                o[this.name] = [o[this.name]];
-                            }
-                            o[this.name].push(this.value || '');
-                        } else {
-                            o[this.name] = this.value || '';
-                        }
-                    }
-               });
-               return o;
-            };
-            $.fn.serializeObjectValuesAsKeys = function()
-            {
-               var o = {};
-               var a = this.serializeArray();
-               $.each(a, function() {
-                    if (this.value != '' && this.value != undefined) {
-                        var v = $.transliterateAll(this.value);
-                        if (o[v]) {
-                            if (!o[v].push) {
-                                o[v] = [o[v]];
-                            }
-                            o[v].push('');
-                        } else {
-                            o[v] = '';
-                        }
-                    }
-               });
-               delete o[''];
-               return o;
-            };
-            
-            $.fn.Cicada = {};
-            $.fn.Cicada.field_types = {
-                        "date": {
-                            "format":"date-time",
-                            "_inputex": {
-                                "_type":"datepicker"
-                            }
-                        },
-                        "time": {
-                            "format":"time",
-                            "_inputex": {
-                                "_type":"time"
-                            }
-                        },
-                        "color": {
-                            "format":"color",
-                            "_inputex": {
-                                "_type":"color",
-                                "palette": 3
-                            }
-                        },
-                        "phone": {
-                            "format":"phone"
-                        },
-                        "uri, url, web":{
-                            "format":"uri",
-                            "_inputex":{
-                                "_type":"url",
-                                "showMsg":true
-                            }
-                        },
-                        "email":{
-                            "format":"email",
-                            "_inputex":{
-                                "_type":"email",
-                                "showMsg":true
-                            }
-                        },
-                        "address, street address":{
-                            "format":"street-address",
-                            "_inputex":{
-                                "_type":"street-address"
-                            }
-                        },
-                        "ip, ip address":{
-                            "format":"ip-address",
-                            "_inputex":{
-                                "_type":"IPv4",
-                                "showMsg":true
-                            }
-                        },
-                        "city, locality":{
-                            "format":"locality",
-                            "_inputex":{
-                                "_type":"locality"
-                            }
-                        },
-                        "state, region":{
-                            "format":"region",
-                            "_inputex":{
-                                "_type":"region"
-                            }
-                        },
-                        "zip, postal code":{
-                            "format":"postal-code",
-                            "_inputex":{
-                                "_type":"postal-code"
-                            }
-                        },
-                        "country":{
-                            "format":"country",
-                            "_inputex":{
-                                "_type":"country"
-                            }
-                        }
-                    };
-            
-            $.fn.toJSONSchema = function(name) {
-                var field_types = this.Cicada.field_types;
-                var o = this.serializeObject();
-                var schema = {};
-                schema[name] = {"id":name, "description":"Cicada generated JSON Schema for "+name,
-                    "type":"object", "properties":o};
-                for(var prop in schema[name].properties) {
-                   schema[name].properties[prop] = {"type":"string", "optional":true, "title":schema[name].properties[prop],
-                        "_inputex":{"label":schema[name].properties[prop]}};
-                    
-                    function mergeInFieldSettings(s, key) {
-                        if (prop.search(new RegExp(s, "i")) != -1) {
-                            for (var el in field_types[key]) {
-                                if (typeof field_types[key][el] == 'object') {
-                                    for (var el2 in field_types[key][el]) {
-                                        schema[name].properties[prop][el][el2] = field_types[key][el][el2];
-                                    }
-                                } else {
-                                    schema[name].properties[prop][el] = field_types[key][el];
-                                }
-                            }
-                        }
-                    }
-                    
-                    for (var key in field_types) {
-                        if ((ses = key.split(',')).length > 1) {
-                            $(ses).each(function(idx, s2) {
-                                mergeInFieldSettings(s2.trim(), key);
-                            });
-                        } else {
-                            mergeInFieldSettings(key, key);
-                        }
-                    }
-                }
-                return schema;
-            }
-            
-            $.fn.toInputExForm = function(schema) {
-                // Create the JsonSchema builder object
-                var builder = new inputEx.JsonSchema.Builder({
-                        'schemaIdentifierMap': schema,
-                        'defaultOptions':{
-                           'showMsg':true
-                        }
+        <script type="text/javascript" src="js/jquery.entryway.js"></script>
 
-                });
-                
-                // get schema name
-                for(var name in schema) {}
-                
-                // Get the inputEx field definition from the "Person" object
-                var inputExDefinition = builder.schemaToInputEx(schema[name]);
-                
-                // Add 'container1' as parent element
-                inputExDefinition.parentEl = 'reformed';
-                
-                $('#reformed').empty();
-                // Create the form
-                var f = inputEx(inputExDefinition);
-                $('#reformedcol').css('display', 'block');
-            }
-            
-            
+        <script type="text/javascript">
             $(document).ready(function() {
                 $('#name').change(function() {
                     $('#inlinename').html($('#name').val());
@@ -216,7 +39,8 @@
                 $('#reform').click(function() {
                    var obj = $('form#thing fieldset input').toJSONSchema($('#name').val());
                    $('#jsonschema').html(schema = JSON.stringify(obj, null, '\t'));
-                   $.fn.toInputExForm(obj);
+                   $.fn.toInputExForm(obj, 'reformed');
+                    $('#reformedcol').css('display', 'block');
                 });
                     
                 $('#thing fieldset input').each(function(idx, el) {
