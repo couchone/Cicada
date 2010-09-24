@@ -46,7 +46,7 @@
                 });
                 return o;
             }
-            
+
             $.Cicada = {};
             $.Cicada.field_types = {
                         "date, birthday, anniversary": {
@@ -123,7 +123,7 @@
                             }
                         }
                     };
-            
+
             toJSONSchema = function(name, o) {
                 var field_types = $.Cicada.field_types;
                 var schema = {};
@@ -133,7 +133,7 @@
                 for(var prop in schema[name].properties) {
                    schema[name].properties[prop] = {"type":"string", "optional":true, "title":schema[name].properties[prop],
                         "_inputex":{"label":schema[name].properties[prop]}};
-                    
+
                     function mergeInFieldSettings(s, key) {
                         if (prop.search(new RegExp(s, "i")) != -1) {
                             for (var el in field_types[key]) {
@@ -147,7 +147,7 @@
                             }
                         }
                     }
-                    
+
                     for (var key in field_types) {
                         if ((ses = key.split(',')).length > 1) {
                             $(ses).each(function(idx, s2) {
@@ -175,20 +175,46 @@
                         }
 
                 });
-                
+
                 // get schema name
                 for(var name in schema) {}
-                
+
                 // Get the inputEx field definition from the "Person" object
                 var inputExDefinition = builder.schemaToInputEx(schema[name]);
-                
                 // Add 'container1' as parent element
                 inputExDefinition.parentEl = here;
-                $(inputExDefinition.fields).each(function(idx, el) {
-                    inputExDefinition.fields[idx] = {'type':'type', 'value':el};
-                });
-                
+                if (editing) {
+                    var oldfields = inputExDefinition.fields;
+                    inputExDefinition.fields = [{
+                                                   type: 'list',
+                                                   maxItems: 40,
+                                                   minItems: 1,
+                                                   elementType: {type: 'type'},
+                                                   name: 'attributes',
+                                                   value: [],
+                                                   useButtons: false,
+                                                   sortable: true
+                                           }]
+                    $(oldfields).each(function(idx, el) {
+                        inputExDefinition.fields[0].value[idx] = el;
+                    });
+                } else {
+                    $(inputExDefinition.fields).each(function(idx, el) {
+                        inputExDefinition.fields[idx] = el;
+                    });
+                }
+
+                inputExDefinition.buttons = [
+                            {type: 'link', value: 'Start Using this Form', onClick: function() {
+                                    var json = toJSONSchema(
+                                                            attributesForm.getFieldByName('thing').getValue(),
+                                                            $(attributesForm.getValue().attributes).serializeObjectFromArray()
+                                                    );
+                                    editingForm = $.fn.toInputExForm(json, 'editingform', true);
+                                    $('#formnotice').fadeIn('slow');
+                                    return false;
+                            }}];
                 $('#'+here).empty();
                 // Create the form
-                var f = inputEx(inputExDefinition);
+                return f = inputEx(inputExDefinition);
             }

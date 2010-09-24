@@ -44,7 +44,8 @@ lang.extend(inputEx.TypeField, inputEx.Field, {
       
       // Button to switch the panel
       this.button = inputEx.cn('div', {className: "inputEx-TypeField-EditButton"});
-      this.button.appendChild(this.propertyPanel);
+      //this.button.appendChild(this.propertyPanel);
+      YAHOO.util.Dom.get('typeediting').appendChild(this.propertyPanel);
       this.fieldContainer.appendChild(this.button);
       
       // Build the groupOptions

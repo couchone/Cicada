@@ -67,3 +67,8 @@ body{
 #ft {
 	padding:15px 0;
 }
+
+/** inputEx overrides **/
+div.inputEx-TypeField-PropertiesPanel{
+	position:static;
+}
